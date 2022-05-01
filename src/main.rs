@@ -1,5 +1,77 @@
+use std::io;
+
 fn main() {
-	println!("Hello, world!");
+	println!("Welcome to the privacy enhanced match maker");
+	println!("Alice, do you want to date Bob?, [yes/no]");
+	let alice = match read_input().as_str() {
+		"yes\n" => Alice { secret_input: true },
+		"no\n" => Alice { secret_input: false },
+		_ => {
+			println!("error reading Alice's input");
+			return;
+		}
+	};
+	let alice_deck = alice.encode_alice_input();
+
+	println!("Bob, do you want to date Alice? [yes/no]");
+	let bob = match read_input().as_str() {
+		"yes\n" => Bob { secret_input: true },
+		"no\n" => Bob { secret_input: false },
+		_ => {
+			println!("error reading Bob's input");
+			return;
+		}
+	};
+	let bob_deck = bob.encode_bob_input();
+
+	let mut deck = Deck::join_decks(alice_deck.clone(), bob_deck.clone());
+	println!("Bob please shuffle, please pick number of shuffles [1,2,3,4,5]");
+	let bob_shift = match read_input().as_str() {
+		"1\n" => 1,
+		"2\n" => 2,
+		"3\n" => 3,
+		"4\n" => 4,
+		"5\n" => 5,
+		_ => {
+			println!("error reading Bob's input");
+			return;
+		}
+	};
+	deck.cyclic_shift(bob_shift);
+
+	println!("Alice please shuffle, please pick number of shuffles [1,2,3,4,5]");
+	let alice_shift = match read_input().as_str() {
+		"1\n" => 1,
+		"2\n" => 2,
+		"3\n" => 3,
+		"4\n" => 4,
+		"5\n" => 5,
+		_ => {
+			println!("error reading Alice's input");
+			return;
+		}
+	};
+	deck.cyclic_shift(alice_shift);
+
+	let res = deck.decode();
+	let res_str = match res {
+		false => "No match",
+		true => "Match successful",
+	};
+	println!("match result: {:?}", res_str);
+}
+
+fn read_input() -> String {
+	let mut input = String::new();
+	match io::stdin().read_line(&mut input) {
+		Ok(_n) => {
+			input
+		}
+		Err(error) => {
+			println!("error: {}", error);
+			return String::from("error");
+		}
+	}
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -116,7 +188,7 @@ mod tests {
 		assert_eq!(deck5.decode(), true);
 
 		let alice = Alice { secret_input: true };
-		let bob = Bob { secret_input: false, };
+		let bob = Bob { secret_input: false };
 
 		let alice_deck = alice.encode_alice_input();
 		let bob_deck = bob.encode_bob_input();
@@ -139,7 +211,7 @@ mod tests {
 		assert_eq!(deck5.decode(), false);
 
 		let alice = Alice { secret_input: false };
-		let bob = Bob { secret_input: true, };
+		let bob = Bob { secret_input: true };
 
 		let alice_deck = alice.encode_alice_input();
 		let bob_deck = bob.encode_bob_input();
@@ -162,7 +234,7 @@ mod tests {
 		assert_eq!(deck5.decode(), false);
 
 		let alice = Alice { secret_input: false };
-		let bob = Bob { secret_input: false, };
+		let bob = Bob { secret_input: false };
 
 		let alice_deck = alice.encode_alice_input();
 		let bob_deck = bob.encode_bob_input();
